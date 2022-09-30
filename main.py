@@ -47,7 +47,7 @@ class Asset(db.Model):
     id = Column(Integer, primary_key=True)
     person_id = db.Column(db.Integer, db.ForeignKey('person.id'),
                           nullable=False)
-    asset_id = Column(Integer, nullable=False, unique=True)
+    asset_id = Column(String(250), nullable=False, unique=True)
     date_added = Column(String(250), nullable=False)
     serial_num = Column(String(250), nullable=False, unique=True)
     device = Column(String(250), nullable=False)
