@@ -38,39 +38,23 @@
 
 <main role="main" class="pt-3 px-4">
   <div class="pb-2 mb-3 border-bottom text-center">
-    <h1>Add Asset</h1>
+    <h1>Add User</h1>
   </div>
 
   <div class="container col-4">
     <form method="post">
       {{ form.csrf_token }}
       <div class="form-group">
-          <div>{{ form.asset_id.label }}</div>
-          <div >{{ form.asset_id(class="form-control") }}</div>
-      </div>
-          <div class="form-group">
-          <div>{{ form.serial_num.label }}</div>
-          <div >{{ form.serial_num(class="form-control") }}</div>
-      </div>
-          <div class="form-group">
-          <div>{{ form.assigned_to.label }}</div>
-          <div >{{ form.assigned_to(class="form-control") }}</div>
+          <div>{{ form.firstname.label }}</div>
+          <div >{{ form.firstname(class="form-control") }}</div>
       </div>
       <div class="form-group">
-          <div>{{ form.device.label }}</div>
-          <div >{{ form.device(class="form-control") }}</div>
+          <div>{{ form.lastname.label }}</div>
+          <div >{{ form.lastname(class="form-control") }}</div>
       </div>
       <div class="form-group">
-          <div>{{ form.product.label }}</div>
-          <div >{{ form.product(class="form-control") }}</div>
-      </div>
-        <div class="form-group">
-          <div>{{ form.notes.label }}</div>
-          <div >{{ form.notes(class="form-control") }}</div>
-      </div>
-      <div class="form-group">
-          <div>{{ form.decommissioned.label }}</div>
-          <div >{{ form.decommissioned() }}</div>
+          <div>{{ form.department.label }}</div>
+          <div >{{ form.department(class="form-control") }}</div>
       </div>
       <br>
       <div>{{ form.submit(class="btn btn-primary") }}</div>

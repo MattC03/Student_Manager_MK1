@@ -1,7 +1,7 @@
+import datetime
 from functools import wraps
 from flask import Flask, render_template, redirect, url_for, flash, abort
-from datetime import date
-from sqlalchemy import ForeignKey, Column, String, Integer, Boolean, DateTime, Text
+from sqlalchemy import ForeignKey, Column, String, Integer, Boolean, Text
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, backref
@@ -38,7 +38,7 @@ class User(db.Model, UserMixin):
 class Person(db.Model):
     id = Column(Integer, primary_key=True)
     firstname = Column(String(250), nullable=False)
-    surname = Column(String(250), nullable=False)
+    lastname = Column(String(250), nullable=False)
     department = Column(String(250), nullable=False)
     assets = db.relationship('Asset', backref='person', lazy=True)
 
@@ -48,7 +48,7 @@ class Asset(db.Model):
     person_id = db.Column(db.Integer, db.ForeignKey('person.id'),
                           nullable=False)
     asset_id = Column(Integer, nullable=False, unique=True)
-    date_added = Column(DateTime, nullable=False)
+    date_added = Column(String(250), nullable=False)
     serial_num = Column(String(250), nullable=False, unique=True)
     device = Column(String(250), nullable=False)
     product = Column(String(250), nullable=False)
@@ -78,8 +78,8 @@ def admin_only(f):
 @app.route('/')
 def index():
     if current_user.is_authenticated:
-        posts = Asset.query.all()
-        return render_template("index.html", all_posts=posts)
+        assets = Asset.query.all()
+        return render_template("index.html", all_assets=assets)
     else:
         return redirect((url_for('login')))
 
@@ -132,16 +132,42 @@ def logout():
 
 
 @app.route("/new-asset", methods=['GET', 'POST'])
-@admin_only
 def new_asset():
     form = forms.CreateAssetForm()
+    form.assigned_to.choices = [f"{person.firstname} {person.lastname}" for person in db.session.query(Person).all()]
+    users = db.session.query(Person).all()
     if form.validate_on_submit():
-        new_post = Asset(
+        new_asset = Asset(
+            person_id=db.session.query(Person).filter_by(firstname=form.assigned_to.data.split(" ")[0],
+                                                         lastname=form.assigned_to.data.split(" ")[1]).first().id,
+            asset_id=form.asset_id.data,
+            date_added=datetime.date.today().strftime("%B %d, %Y"),
+            serial_num=form.serial_num.data,
+            device=form.device.data,
+            product=form.product.data,
+            added_by=current_user.name,
+            notes=form.notes.data,
+            decommissioned=form.decommissioned.data,
         )
-        db.session.add(new_post)
+        db.session.add(new_asset)
         db.session.commit()
         return redirect(url_for("index"))
-    return render_template("new-asset.html", form=form)
+    return render_template("new-asset.html", form=form, users=users)
+
+
+@app.route("/new-user", methods=['GET', 'POST'])
+def new_user():
+    form = forms.CreateUserForm()
+    if form.validate_on_submit():
+        new_person = Person(
+            firstname=form.firstname.data,
+            lastname=form.lastname.data,
+            department=form.department.data,
+        )
+        db.session.add(new_person)
+        db.session.commit()
+        return redirect(url_for("index"))
+    return render_template("new-user.html", form=form)
 
 
 @app.route("/delete/<int:post_id>")

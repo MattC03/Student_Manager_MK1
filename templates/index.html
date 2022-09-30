@@ -37,6 +37,7 @@
 </nav>
 
 <main role="main" class="pt-3 px-4">
+  <h1>Welcome {{current_user.name}}</h1>
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">Dashboard</h1>
   </div>
@@ -57,12 +58,14 @@
         </div>
         <div class="col-md">
           <div class="card">
+            <a class='nav-link' href="{{url_for('new_user')}}">
             <div class="card-body">
               <h5 class="card-title">Add User</h5>
               <h6 class="card-subtitle mb-2 text-muted">Click here to add a new user</h6>
               <hr>
               <p class="card-text"><i class="fa-solid fa-user fa-2xl"></i></p>
             </div>
+            </a>
           </div>
         </div>
         <div class="col-md">
@@ -84,17 +87,30 @@
       <thead>
         <tr>
           <th>Asset #</th>
-          <th>Owner</th>
+          <th>Assigned To</th>
           <th>Date Added</th>
           <th>Serial #</th>
           <th>Device</th>
           <th>Product</th>
           <th>Decommissioned</th>
+          <th>Analyst</th>
           <th>Notes</th>
         </tr>
       </thead>
       <tbody>
-
+      {% for asset in all_assets %}
+        <tr>
+          <td>{{ asset.asset_id }}</td>
+          <td>{{ asset.person.firstname}} {{ asset.person.lastname}}</td>
+          <td>{{ asset.date_added }}</td>
+          <td>{{ asset.serial_num }}</td>
+          <td>{{ asset.device }}</td>
+          <td>{{ asset.product }}</td>
+          <td>{{ asset.decommissioned }}</td>
+          <td>{{ asset.added_by }}</td>
+          <td>{{ asset.notes }}</td>
+        </tr>
+      {% endfor %}
       </tbody>
     </table>
   </div>
