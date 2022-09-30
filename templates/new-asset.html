@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}SATCoL Assets{% endblock %}
+
+{% block style %}
+{{ super() }}
+<!-- CSS  -->
+<link rel="stylesheet" href="{{url_for('static', filename='dashboard.css')}}">
+{% endblock %}
+
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+  <a class="navbar-brand" href="{{ url_for('index') }}">SATCoL</a>>
+    <ul class="navbar-nav me-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Link</a>
+      </li>
+    </ul>
+    <ul class="navbar-nav ms-auto px-3">
+      <li class="nav-item">
+        {% if current_user.role == "Admin" %}
+        <a class="nav-link" href="#">Admin</a>
+        {% endif %}
+      </li>
+      <li>
+        <a class="nav-link" href="{{ url_for('logout') }}">Sign Out</a>
+      </li>
+    </ul>
+    <form class="d-flex" role="search">
+      <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+      <button class="btn btn-outline-light" type="submit">Search</button>
+    </form>
+</nav>
+
+<main role="main" class="pt-3 px-4">
+  <div class="pb-2 mb-3 border-bottom text-center">
+    <h1>Add Asset</h1>
+  </div>
+
+  <div class="container col-4">
+    <form method="post">
+      {{ form.csrf_token }}
+      <div class="form-group">
+          <div>{{ form.asset_id.label }}</div>
+          <div >{{ form.asset_id(class="form-control") }}</div>
+      </div>
+      <div class="form-group">
+          <div>{{ form.serial_num.label }}</div>
+          <div >{{ form.serial_num(class="form-control") }}</div>
+      </div>
+      <div class="form-group">
+          <div>{{ form.device.label }}</div>
+          <div >{{ form.device(class="form-control") }}</div>
+      </div>
+      <div class="form-group">
+          <div>{{ form.product.label }}</div>
+          <div >{{ form.product(class="form-control") }}</div>
+      </div>
+      <div class="form-group">
+          <div>{{ form.decommissioned.label }}</div>
+          <div >{{ form.decommissioned() }}</div>
+      </div>
+      <br>
+      <div>{{ form.submit(class="btn btn-primary") }}</div>
+    </form>
+  </div>
+
+</main>
+
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}SATCoL Assets{% endblock %}
+
+{% block style %}
+{{ super() }}
+<!-- CSS  -->
+<link rel="stylesheet" href="{{url_for('static', filename='dashboard.css')}}">
+{% endblock %}
+
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+  <a class="navbar-brand" href="{{ url_for('index') }}">SATCoL</a>>
+    <ul class="navbar-nav me-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Link</a>
+      </li>
+    </ul>
+    <ul class="navbar-nav ms-auto px-3">
+      <li class="nav-item">
+        {% if current_user.role == "Admin" %}
+        <a class="nav-link" href="#">Admin</a>
+        {% endif %}
+      </li>
+      <li>
+        <a class="nav-link" href="{{ url_for('logout') }}">Sign Out</a>
+      </li>
+    </ul>
+    <form class="d-flex" role="search">
+      <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+      <button class="btn btn-outline-light" type="submit">Search</button>
+    </form>
+</nav>
+
+<main role="main" class="pt-3 px-4">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+  </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md">
+          <div class="card">
+            <a class='nav-link' href="{{url_for('new_asset')}}">
+              <div class="card-body card-hover">
+                <h5 class="card-title">Add Asset</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Click here to add a new asset</h6>
+                <hr>
+                <p class="card-text"><i class="fa-solid fa-computer fa-2xl"></i></p>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="col-md">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Add User</h5>
+              <h6 class="card-subtitle mb-2 text-muted">Click here to add a new user</h6>
+              <hr>
+              <p class="card-text"><i class="fa-solid fa-user fa-2xl"></i></p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Reports</h5>
+              <h6 class="card-subtitle mb-2 text-muted">Click here to generate reports</h6>
+              <hr>
+              <p class="card-text"><i class="fa-solid fa-chart-simple fa-2xl"></i></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <h2>Assets</h2>
+  <div class="table-responsive">
+    <table class="table table-striped table-sm">
+      <thead>
+        <tr>
+          <th>Asset #</th>
+          <th>Owner</th>
+          <th>Date Added</th>
+          <th>Serial #</th>
+          <th>Device</th>
+          <th>Product</th>
+          <th>Decommissioned</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}
