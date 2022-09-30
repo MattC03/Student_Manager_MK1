@@ -2,39 +2,16 @@
 
 {% block title %}SATCoL Assets{% endblock %}
 
-{% block style %}
+{% block head %}
 {{ super() }}
 <!-- CSS  -->
 <link rel="stylesheet" href="{{url_for('static', filename='dashboard.css')}}">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+<script type="text/javascript" language="javascript" src="{{ url_for('static', filename='js/table.js') }}"></script>
 {% endblock %}
 
 {% block content %}
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
-  <a class="navbar-brand" href="{{ url_for('index') }}">SATCoL</a>>
-    <ul class="navbar-nav me-auto">
-      <li class="nav-item active">
-        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Link</a>
-      </li>
-    </ul>
-    <ul class="navbar-nav ms-auto px-3">
-      <li class="nav-item">
-        {% if current_user.role == "Admin" %}
-        <a class="nav-link" href="#">Admin</a>
-        {% endif %}
-      </li>
-      <li>
-        <a class="nav-link" href="{{ url_for('logout') }}">Sign Out</a>
-      </li>
-    </ul>
-    <form class="d-flex" role="search">
-      <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-      <button class="btn btn-outline-light" type="submit">Search</button>
-    </form>
-</nav>
 
 <main role="main" class="pt-3 px-4">
   <h1>Welcome {{current_user.name}}</h1>
@@ -96,7 +73,7 @@
 
   <h2>Assets</h2>
   <div class="table-responsive">
-    <table class="table table-striped table-sm">
+    <table id="main_table" class="display table table-striped table-sm">
       <thead>
         <tr>
           <th>Asset #</th>
@@ -113,6 +90,7 @@
       </thead>
       <tbody>
       {% for asset in all_assets %}
+        {% if loop.depth0 < 9 %}
         <tr>
           <td>{{ asset.asset_id }}</td>
           <td>{{ asset.person.firstname}} {{ asset.person.lastname}}</td>
@@ -125,6 +103,7 @@
           <td>{{ asset.notes }}</td>
           <td><a href="{{ url_for('delete_asset', asset_id=asset.id)}}"><i class="fa-solid fa-x"></i></a></td>
         </tr>
+        {% endif %}
       {% endfor %}
       </tbody>
     </table>

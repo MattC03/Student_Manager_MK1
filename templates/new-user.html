@@ -10,32 +10,6 @@
 
 {% block content %}
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
-  <a class="navbar-brand" href="{{ url_for('index') }}">SATCoL</a>>
-    <ul class="navbar-nav me-auto">
-      <li class="nav-item active">
-        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Link</a>
-      </li>
-    </ul>
-    <ul class="navbar-nav ms-auto px-3">
-      <li class="nav-item">
-        {% if current_user.role == "Admin" %}
-        <a class="nav-link" href="#">Admin</a>
-        {% endif %}
-      </li>
-      <li>
-        <a class="nav-link" href="{{ url_for('logout') }}">Sign Out</a>
-      </li>
-    </ul>
-    <form class="d-flex" role="search">
-      <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-      <button class="btn btn-outline-light" type="submit">Search</button>
-    </form>
-</nav>
-
 <main role="main" class="pt-3 px-4">
   <div class="pb-2 mb-3 border-bottom text-center">
     <h1>Add User</h1>
