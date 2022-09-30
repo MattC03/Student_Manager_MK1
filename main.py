@@ -184,10 +184,10 @@ def new_user():
     return render_template("new-user.html", form=form)
 
 
-@app.route("/delete/<int:post_id>")
-def delete_post(post_id):
-    post_to_delete = Asset.query.get(post_id)
-    db.session.delete(post_to_delete)
+@app.route("/delete/<int:asset_id>")
+def delete_asset(asset_id):
+    asset_to_delete = db.session.query(Asset).filter_by(id=asset_id).first()
+    db.session.delete(asset_to_delete)
     db.session.commit()
     return redirect(url_for('index'))
 
