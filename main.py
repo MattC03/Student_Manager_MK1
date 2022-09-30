@@ -134,25 +134,38 @@ def logout():
 @app.route("/new-asset", methods=['GET', 'POST'])
 def new_asset():
     form = forms.CreateAssetForm()
+    # Create a list of choices for the person to assign item to.
     form.assigned_to.choices = [f"{person.firstname} {person.lastname}" for person in db.session.query(Person).all()]
-    users = db.session.query(Person).all()
+    # On a valid submit of the form.
     if form.validate_on_submit():
-        new_asset = Asset(
-            person_id=db.session.query(Person).filter_by(firstname=form.assigned_to.data.split(" ")[0],
-                                                         lastname=form.assigned_to.data.split(" ")[1]).first().id,
-            asset_id=form.asset_id.data,
-            date_added=datetime.date.today().strftime("%B %d, %Y"),
-            serial_num=form.serial_num.data,
-            device=form.device.data,
-            product=form.product.data,
-            added_by=current_user.name,
-            notes=form.notes.data,
-            decommissioned=form.decommissioned.data,
-        )
-        db.session.add(new_asset)
-        db.session.commit()
-        return redirect(url_for("index"))
-    return render_template("new-asset.html", form=form, users=users)
+        # Make sure asset id is not already used.
+        if not db.session.query(Asset).filter_by(asset_id=form.asset_id.data).first():
+            # Make sure that serial number is not already in there.
+            if not db.session.query(Asset).filter_by(asset_id=form.serial_num.data).first():
+                # Make the asset and submit it to the database.
+                new_asset = Asset(
+                    person_id=db.session.query(Person).filter_by(firstname=form.assigned_to.data.split(" ")[0],
+                                                                 lastname=form.assigned_to.data.split(" ")[1]).first().id,
+                    asset_id=form.asset_id.data,
+                    date_added=datetime.date.today().strftime("%B %d, %Y"),
+                    serial_num=form.serial_num.data,
+                    device=form.device.data,
+                    product=form.product.data,
+                    added_by=current_user.name,
+                    notes=form.notes.data,
+                    decommissioned=form.decommissioned.data,
+                )
+                db.session.add(new_asset)
+                db.session.commit()
+                flash(f"Asset {form.asset_id.data} has been added!")
+                return redirect(url_for("index"))
+            else:
+                flash("This serial has already been used.")
+                return render_template("new-asset.html", form=form)
+        else:
+            flash("This asset # has already been used.")
+            return render_template("new-asset.html", form=form)
+    return render_template("new-asset.html", form=form)
 
 
 @app.route("/new-user", methods=['GET', 'POST'])
@@ -166,6 +179,7 @@ def new_user():
         )
         db.session.add(new_person)
         db.session.commit()
+        flash(f"User {form.firstname.data} has been created!")
         return redirect(url_for("index"))
     return render_template("new-user.html", form=form)
 
