@@ -56,9 +56,7 @@ class Asset(db.Model):
     notes = Column(Text, nullable=False)
     decommissioned = Column(Boolean)
 
-
 db.create_all()
-
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -196,9 +194,7 @@ def edit_asset(asset_id):
         asset_to_edit.person_id = db.session.query(Person).filter_by(firstname=form.assigned_to.data.split(" ")[0],
                                                                      lastname=form.assigned_to.data.split(" ")[
                                                                          1]).first().id
-        print(form.notes.data)
         asset_to_edit.notes = form.notes.data
-        print(asset_to_edit.notes)
         asset_to_edit.decommissioned = form.decommissioned.data
         asset_to_edit.added_by = current_user.name
         db.session.commit()
