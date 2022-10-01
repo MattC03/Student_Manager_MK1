@@ -6,7 +6,7 @@
         <div class="col-4">
             <div class="card">
                 <div class="card-body">
-                    <form method="post" novalidate>
+                    <form method="post">
                         {{ form.csrf_token }}
                         <h1>New User</h1>
                         <hr>
@@ -21,6 +21,10 @@
                         <div class="form-group">
                             <div>{{ form.password.label }}</div>
                             <div >{{ form.password(class="form-control") }}</div>
+                        </div>
+                        <div class="form-group">
+                            <div>{{ form.confirm_password.label }}</div>
+                            <div >{{ form.confirm_password(class="form-control") }}</div>
                         </div>
                         <br>
                         <div>{{ form.submit(class="btn btn-primary") }}</div>

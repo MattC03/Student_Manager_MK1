@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, backref
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 import forms
-import ldap3
+# import ldap3
 
 ##SETUP APP
 app = Flask(__name__)
@@ -130,6 +130,22 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route("/new-user", methods=['GET', 'POST'])
+def new_user():
+    form = forms.CreateUserForm()
+    if form.validate_on_submit():
+        new_person = Person(
+            firstname=form.firstname.data,
+            lastname=form.lastname.data,
+            department=form.department.data,
+        )
+        db.session.add(new_person)
+        db.session.commit()
+        flash(f"User {form.firstname.data} has been created!")
+        return redirect(url_for("index"))
+    return render_template("new-user.html", form=form)
+
+# #### ASSET MANAGEMENT #####
 
 @app.route("/new-asset", methods=['GET', 'POST'])
 def new_asset():
@@ -168,20 +184,38 @@ def new_asset():
     return render_template("new-asset.html", form=form)
 
 
-@app.route("/new-user", methods=['GET', 'POST'])
-def new_user():
-    form = forms.CreateUserForm()
-    if form.validate_on_submit():
-        new_person = Person(
-            firstname=form.firstname.data,
-            lastname=form.lastname.data,
-            department=form.department.data,
-        )
-        db.session.add(new_person)
+@app.route("/edit-asset/<int:asset_id>", methods=['GET', 'POST'])
+def edit_asset(asset_id):
+    # Builds the form and find the asset in the database.
+    form = forms.EditAssetForm()
+    form.assigned_to.choices = [f"{person.firstname} {person.lastname}" for person in db.session.query(Person).all()]
+    asset_to_edit = db.session.query(Asset).filter_by(id=asset_id).first()
+
+    # Checks to see if the form is submitted and then does the edit on database.
+    if form.validate_on_submit() :
+        asset_to_edit.person_id = db.session.query(Person).filter_by(firstname=form.assigned_to.data.split(" ")[0],
+                                                                     lastname=form.assigned_to.data.split(" ")[
+                                                                         1]).first().id
+        print(form.notes.data)
+        asset_to_edit.notes = form.notes.data
+        print(asset_to_edit.notes)
+        asset_to_edit.decommissioned = form.decommissioned.data
+        asset_to_edit.added_by = current_user.name
         db.session.commit()
-        flash(f"User {form.firstname.data} has been created!")
+        flash(f"Asset # {asset_to_edit.asset_id} has been updated!")
         return redirect(url_for("index"))
-    return render_template("new-user.html", form=form)
+
+    # Pre-populates the form with the correct information. The form has the parts that should not be edited disabled.
+    form.id.data = asset_id
+    form.asset_id.data = asset_to_edit.asset_id
+    form.serial_num.data = asset_to_edit.serial_num
+    form.assigned_to.data = f"{asset_to_edit.person.firstname} {asset_to_edit.person.lastname}"
+    form.device.data = asset_to_edit.device
+    form.product.default = asset_to_edit.product
+    form.decommissioned.data = asset_to_edit.decommissioned
+    form.notes.data = asset_to_edit.notes
+
+    return render_template("edit-asset.html", form=form, asset_id=asset_id)
 
 
 @app.route("/delete/<int:asset_id>")
