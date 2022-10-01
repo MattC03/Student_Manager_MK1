@@ -20,15 +20,12 @@
   <a class="navbar-brand" href="{{ url_for('index') }}">SATCoL</a>>
     <ul class="navbar-nav me-auto">
       <li class="nav-item active">
-        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Link</a>
+        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
       </li>
     </ul>
     <ul class="navbar-nav ms-auto px-3">
       <li class="nav-item">
-        {% if current_user.role == "Admin" %}
+        {% if current_user.power_value == 1 %}
         <a class="nav-link" href="#">Admin</a>
         {% endif %}
       </li>

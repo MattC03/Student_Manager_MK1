@@ -32,7 +32,7 @@ class User(db.Model, UserMixin):
     email = Column(String(255), unique=True)
     name = Column(String(255), unique=True, nullable=True)
     password = Column(String(255), nullable=False)
-    role = Column(String(255), nullable=False)
+    power_value = Column(Integer, nullable=False)
 
 
 class Person(db.Model):
@@ -66,7 +66,7 @@ def load_user(user_id):
 def admin_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.role != "Admin":
+        if current_user.power_value != 1:
             return abort(403)
         return f(*args, **kwargs)
 
@@ -83,6 +83,7 @@ def index():
 
 
 @app.route('/register', methods=['GET', 'POST'])
+@admin_only
 def register():
     form = forms.RegisterForm()
     if form.validate_on_submit():
@@ -129,6 +130,7 @@ def logout():
     return redirect(url_for('index'))
 
 @app.route("/new-user", methods=['GET', 'POST'])
+@login_required
 def new_user():
     form = forms.CreateUserForm()
     if form.validate_on_submit():
@@ -146,6 +148,7 @@ def new_user():
 # #### ASSET MANAGEMENT #####
 
 @app.route("/new-asset", methods=['GET', 'POST'])
+@login_required
 def new_asset():
     form = forms.CreateAssetForm()
     # Create a list of choices for the person to assign item to.
@@ -183,6 +186,7 @@ def new_asset():
 
 
 @app.route("/edit-asset/<int:asset_id>", methods=['GET', 'POST'])
+@login_required
 def edit_asset(asset_id):
     # Builds the form and find the asset in the database.
     form = forms.EditAssetForm()
@@ -215,6 +219,7 @@ def edit_asset(asset_id):
 
 
 @app.route("/delete/<int:asset_id>")
+@admin_only
 def delete_asset(asset_id):
     asset_to_delete = db.session.query(Asset).filter_by(id=asset_id).first()
     db.session.delete(asset_to_delete)
