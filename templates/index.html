@@ -32,28 +32,28 @@
       {% endif %}
     {% endwith %}
 
-    <div class="container">
+    <div class="container pb-5">
       <div class="row">
         <div class="col-md">
           <div class="card">
-            <a class='nav-link' href="{{url_for('new_asset')}}">
+            <a class='nav-link' href="{{url_for('new_student')}}">
               <div class="card-body card-hover">
-                <h5 class="card-title">Add Asset</h5>
-                <h6 class="card-subtitle mb-2 text-muted">Click here to add a new asset</h6>
+                <h5 class="card-title">Add Student</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Click here to add a new student</h6>
                 <hr>
-                <p class="card-text"><i class="fa-solid fa-computer fa-2xl"></i></p>
+                <p class="card-text"><i class="fa-solid fa-user fa-2xl"></i></p>
               </div>
             </a>
           </div>
         </div>
         <div class="col-md">
           <div class="card">
-            <a class='nav-link' href="{{url_for('new_user')}}">
+            <a class='nav-link' href="{{url_for('new_room')}}">
             <div class="card-body">
-              <h5 class="card-title">Add User</h5>
-              <h6 class="card-subtitle mb-2 text-muted">Click here to add a new user</h6>
+              <h5 class="card-title">Add Room</h5>
+              <h6 class="card-subtitle mb-2 text-muted">Click here to add a new room</h6>
               <hr>
-              <p class="card-text"><i class="fa-solid fa-user fa-2xl"></i></p>
+              <p class="card-text"><i class="fa-solid fa-door-open fa-2xl"></i></p>
             </div>
             </a>
           </div>
@@ -70,21 +70,15 @@
         </div>
       </div>
     </div>
-
-  <h2>Assets</h2>
+  <h2>Students</h2>
   <div class="table-responsive">
     <table id="main_table" class="display table table-striped table-sm">
       <thead>
         <tr>
-          <th>Asset #</th>
-          <th>Assigned To</th>
-          <th>Date Added</th>
-          <th>Serial #</th>
-          <th>Device</th>
-          <th>Product</th>
-          <th>Decommissioned</th>
-          <th>Analyst</th>
-          <th>Notes</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Room #</th>
+          <th>Block</th>
           <th></th>
           {% if current_user.power_value == 1 %}
           <th></th>
@@ -92,17 +86,12 @@
         </tr>
       </thead>
       <tbody>
-      {% for asset in all_assets %}
+      {% for student in all_students %}
           <tr>
-            <td>{{ asset.asset_id }}</td>
-            <td>{{ asset.person.firstname}} {{ asset.person.lastname}}</td>
-            <td>{{ asset.date_added }}</td>
-            <td>{{ asset.serial_num }}</td>
-            <td>{{ asset.device }}</td>
-            <td>{{ asset.product }}</td>
-            <td>{{ asset.decommissioned }}</td>
-            <td>{{ asset.added_by }}</td>
-            <td>{{ asset.notes }}</td>
+            <td>{{ student.asset_id }}</td>
+            <td>{{ student.person.firstname}} {{ asset.person.lastname}}</td>
+            <td>{{ student.room.number }}</td>
+            <td>{{ student.room.block }}</td>
             <td><a href="{{ url_for('edit_asset', asset_id=asset.id)}}"><i class="fa-solid fa-pen"></i></a></td>
             {% if current_user.power_value == 1 %}
             <td><a href="{{ url_for('delete_asset', asset_id=asset.id)}}"><i class="fa-solid fa-x"></i></a></td>

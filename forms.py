@@ -20,6 +20,7 @@ class CreateRoomForm(FlaskForm):
     block = StringField("Block", validators=[InputRequired()])
     number = IntegerField("Room Number", validators=[InputRequired()])
     max_students = IntegerField("Maximum Students", validators=[InputRequired()])
+    submit = SubmitField("Add Room")
 
 
 class RegisterForm(FlaskForm):

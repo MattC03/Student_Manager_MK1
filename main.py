@@ -51,7 +51,7 @@ class Student(db.Model, UserMixin):
     email = Column(String(250), nullable=False)
     dob = Column(DateTime, nullable=False)
     password = Column(String(250), nullable=False)
-    room_id = Column(Integer, nullable=False)
+    room_id = Column(Integer, db.ForeignKey('room.id'), nullable=False)
     power_value = Column(Integer, nullable=False)
     signed_in = db.Column(Boolean, nullable=False)
     last_sign_in = db.Column(String)
@@ -134,9 +134,19 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/new-room')
+@app.route('/new-room', methods=['GET', 'POST'])
 def new_room():
-    form=forms.CreateRoomForm
+    form = forms.CreateRoomForm()
+    if form.validate_on_submit():
+        room_to_add = Room()
+        room_to_add.block = form.block.data
+        room_to_add.number = form.number.data
+        room_to_add.max_students = form.max_students.data
+        room_to_add.number_of_students = 0
+        db.session.add(room_to_add)
+        db.session.commit()
+        flash(f"Room {room_to_add.block} {room_to_add.number} has been added")
+        return redirect(url_for("index"))
     return render_template('new-room.html', form=form)
 
 
@@ -151,14 +161,16 @@ def new_student():
 
     # On valid submit of the form it will start the creation of a student.
     if form.validate_on_submit():
+        print(db.session.query(Room).filter_by(id=form.room.data).first().id)
         student_to_add = Student()
         student_to_add.firstname = form.firstname.data
         student_to_add.lastname = form.lastname.data
         student_to_add.email = form.email.data
         student_to_add.dob = form.dob.data
-        student_to_add.room_id = db.session.query(Room).filter_by(number="1", block="test")
+        student_to_add.room_id = db.session.query(Room).filter_by(id=form.room.data).first().id
         student_to_add.password = form.password.data
         student_to_add.power_value = 0
+        student_to_add.signed_in = True
         db.session.add(student_to_add)
         db.session.commit()
         flash(f"Student {form.firstname.data} has been created!")
