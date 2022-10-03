@@ -9,6 +9,18 @@
 <div class="container">
     <div class="row justify-content-center align-items-center" style="height:100vh">
         <div class="col-4">
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    {{message}}
+                    <button type="button" class="close btn btn-sm" data-bs-dismiss="alert" aria-label="Close">
+                        <i class="fa-solid fa-x" style="color: #004085"></i>
+                    </button>
+                </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
             <div class="card">
                 <div class="card-body">
                     <form action="" method="post">

@@ -11,7 +11,7 @@
 {% block content %}
 <main role="main" class="pt-3 px-4">
   <div class="pb-2 mb-3 border-bottom text-center">
-    <h1>Edit Asset</h1>
+    <h1>Add Asset</h1>
   </div>
 
 
@@ -29,38 +29,19 @@
     {% endwith %}
 
   <div class="container col-4">
-    <form method="post" enctype="multipart/form-data">
+    <form method="post">
       {{ form.csrf_token }}
       <div class="form-group">
-          <div >{{ form.id(class="form-control") }}</div>
-      </div>
-      <div class="form-group">
-          <div>{{ form.asset_id.label }}</div>
-          <div >{{ form.asset_id(class="form-control") }}</div>
+          <div>{{ form.block.label }}</div>
+          <div >{{ form.block(class="form-control") }}</div>
       </div>
           <div class="form-group">
-          <div>{{ form.serial_num.label }}</div>
-          <div >{{ form.serial_num(class="form-control") }}</div>
+          <div>{{ form.number.label }}</div>
+          <div >{{ form.number(class="form-control") }}</div>
       </div>
           <div class="form-group">
-          <div>{{ form.assigned_to.label }}</div>
-          <div >{{ form.assigned_to(class="form-control") }}</div>
-      </div>
-      <div class="form-group">
-          <div>{{ form.device.label }}</div>
-          <div >{{ form.device(class="form-control") }}</div>
-      </div>
-      <div class="form-group">
-          <div>{{ form.product.label }}</div>
-          <div >{{ form.product(class="form-control") }}</div>
-      </div>
-        <div class="form-group">
-          <div>{{ form.notes.label }}</div>
-          <div >{{ form.notes(class="form-control") }}</div>
-      </div>
-      <div class="form-group">
-          <div>{{ form.decommissioned.label }}</div>
-          <div >{{ form.decommissioned() }}</div>
+          <div>{{ form.max_students.label }}</div>
+          <div >{{ form.max_students(class="form-control") }}</div>
       </div>
       <br>
       <div>{{ form.submit(class="btn btn-primary") }}</div>

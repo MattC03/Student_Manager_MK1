@@ -1,12 +1,12 @@
-import datetime
 from functools import wraps
 from flask import Flask, render_template, redirect, url_for, flash, abort
-from sqlalchemy import ForeignKey, Column, String, Integer, Boolean, Text
+from sqlalchemy import ForeignKey, Column, String, Integer, Boolean, Text, DateTime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, backref
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 import forms
+
 # import ldap3
 
 ##SETUP APP
@@ -35,28 +35,31 @@ class User(db.Model, UserMixin):
     power_value = Column(Integer, nullable=False)
 
 
-class Person(db.Model):
+class Room(db.Model):
+    id = Column(Integer, primary_key=True)
+    students = db.relationship('Student', backref='room', lazy=True)
+    block = Column(String(250), nullable=False)
+    number = Column(Integer, nullable=False)
+    max_students = Column(Integer, nullable=False)
+    number_of_students = Column(Integer, nullable=False)
+
+
+class Student(db.Model, UserMixin):
     id = Column(Integer, primary_key=True)
     firstname = Column(String(250), nullable=False)
     lastname = Column(String(250), nullable=False)
-    department = Column(String(250), nullable=False)
-    assets = db.relationship('Asset', backref='person', lazy=True)
+    email = Column(String(250), nullable=False)
+    dob = Column(DateTime, nullable=False)
+    password = Column(String(250), nullable=False)
+    room_id = Column(Integer, nullable=False)
+    power_value = Column(Integer, nullable=False)
+    signed_in = db.Column(Boolean, nullable=False)
+    last_sign_in = db.Column(String)
+    last_sign_out = db.Column(String)
 
-
-class Asset(db.Model):
-    id = Column(Integer, primary_key=True)
-    person_id = db.Column(db.Integer, db.ForeignKey('person.id'),
-                          nullable=False)
-    asset_id = Column(String(250), nullable=False, unique=True)
-    date_added = Column(String(250), nullable=False)
-    serial_num = Column(String(250), nullable=False, unique=True)
-    device = Column(String(250), nullable=False)
-    product = Column(String(250), nullable=False)
-    added_by = Column(String(250), nullable=False)
-    notes = Column(Text, nullable=False)
-    decommissioned = Column(Boolean)
 
 db.create_all()
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -76,14 +79,15 @@ def admin_only(f):
 @app.route('/')
 def index():
     if current_user.is_authenticated:
-        assets = Asset.query.all()
-        return render_template("index.html", all_assets=assets)
+        students = Student.query.all()
+        return render_template("index.html", all_students=students)
     else:
         return redirect((url_for('login')))
 
 
 @app.route('/register', methods=['GET', 'POST'])
-@admin_only
+# @login_required
+# @admin_only
 def register():
     form = forms.RegisterForm()
     if form.validate_on_submit():
@@ -97,7 +101,7 @@ def register():
         new_user.email = form.email.data
         new_user.password = generate_password_hash(form.password.data, method='pbkdf2:sha256', salt_length=8)
         new_user.name = form.name.data
-        new_user.role = "User"
+        new_user.power_value = 0
         db.session.add(new_user)
         db.session.commit()
         login_user(new_user)
@@ -129,100 +133,46 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route("/new-user", methods=['GET', 'POST'])
+
+@app.route('/new-room')
+def new_room():
+    form=forms.CreateRoomForm
+    return render_template('new-room.html', form=form)
+
+
+@app.route("/new-student", methods=['GET', 'POST'])
 @login_required
-def new_user():
-    form = forms.CreateUserForm()
+def new_student():
+    form = forms.CreateStudentForm()
+    # make a list of rooms that have places left in them. Then sets this as the selector list.
+    all_rooms_available = [(room.id, f"{room.number, room.block}") for room in db.session.query(Room).all() if
+                           room.number_of_students < room.max_students]
+    form.room.choices = all_rooms_available
+
+    # On valid submit of the form it will start the creation of a student.
     if form.validate_on_submit():
-        new_person = Person(
-            firstname=form.firstname.data,
-            lastname=form.lastname.data,
-            department=form.department.data,
-        )
-        db.session.add(new_person)
+        student_to_add = Student()
+        student_to_add.firstname = form.firstname.data
+        student_to_add.lastname = form.lastname.data
+        student_to_add.email = form.email.data
+        student_to_add.dob = form.dob.data
+        student_to_add.room_id = db.session.query(Room).filter_by(number="1", block="test")
+        student_to_add.password = form.password.data
+        student_to_add.power_value = 0
+        db.session.add(student_to_add)
         db.session.commit()
-        flash(f"User {form.firstname.data} has been created!")
+        flash(f"Student {form.firstname.data} has been created!")
         return redirect(url_for("index"))
-    return render_template("new-user.html", form=form)
+    return render_template("new-student.html", form=form)
+
 
 # #### ASSET MANAGEMENT #####
 
-@app.route("/new-asset", methods=['GET', 'POST'])
-@login_required
-def new_asset():
-    form = forms.CreateAssetForm()
-    # Create a list of choices for the person to assign item to.
-    form.assigned_to.choices = [f"{person.firstname} {person.lastname}" for person in db.session.query(Person).all()]
-    # On a valid submit of the form.
-    if form.validate_on_submit():
-        # Make sure asset id is not already used.
-        if not db.session.query(Asset).filter_by(asset_id=form.asset_id.data).first():
-            # Make sure that serial number is not already in there.
-            if not db.session.query(Asset).filter_by(asset_id=form.serial_num.data).first():
-                # Make the asset and submit it to the database.
-                new_asset = Asset(
-                    person_id=db.session.query(Person).filter_by(firstname=form.assigned_to.data.split(" ")[0],
-                                                                 lastname=form.assigned_to.data.split(" ")[1]).first().id,
-                    asset_id=form.asset_id.data,
-                    date_added=datetime.date.today().strftime("%B %d, %Y"),
-                    serial_num=form.serial_num.data,
-                    device=form.device.data,
-                    product=form.product.data,
-                    added_by=current_user.name,
-                    notes=form.notes.data,
-                    decommissioned=form.decommissioned.data,
-                )
-                db.session.add(new_asset)
-                db.session.commit()
-                flash(f"Asset {form.asset_id.data} has been added!")
-                return redirect(url_for("index"))
-            else:
-                flash("This serial has already been used.")
-                return render_template("new-asset.html", form=form)
-        else:
-            flash("This asset # has already been used.")
-            return render_template("new-asset.html", form=form)
-    return render_template("new-asset.html", form=form)
-
-
-@app.route("/edit-asset/<int:asset_id>", methods=['GET', 'POST'])
-@login_required
-def edit_asset(asset_id):
-    # Builds the form and find the asset in the database.
-    form = forms.EditAssetForm()
-    form.assigned_to.choices = [f"{person.firstname} {person.lastname}" for person in db.session.query(Person).all()]
-    asset_to_edit = db.session.query(Asset).filter_by(id=asset_id).first()
-
-    # Checks to see if the form is submitted and then does the edit on database.
-    if form.validate_on_submit() :
-        asset_to_edit.person_id = db.session.query(Person).filter_by(firstname=form.assigned_to.data.split(" ")[0],
-                                                                     lastname=form.assigned_to.data.split(" ")[
-                                                                         1]).first().id
-        asset_to_edit.notes = form.notes.data
-        asset_to_edit.decommissioned = form.decommissioned.data
-        asset_to_edit.added_by = current_user.name
-        db.session.commit()
-        flash(f"Asset # {asset_to_edit.asset_id} has been updated!")
-        return redirect(url_for("index"))
-
-    # Pre-populates the form with the correct information. The form has the parts that should not be edited disabled.
-    form.id.data = asset_id
-    form.asset_id.data = asset_to_edit.asset_id
-    form.serial_num.data = asset_to_edit.serial_num
-    form.assigned_to.data = f"{asset_to_edit.person.firstname} {asset_to_edit.person.lastname}"
-    form.device.data = asset_to_edit.device
-    form.product.default = asset_to_edit.product
-    form.decommissioned.data = asset_to_edit.decommissioned
-    form.notes.data = asset_to_edit.notes
-
-    return render_template("edit-asset.html", form=form, asset_id=asset_id)
-
-
-@app.route("/delete/<int:asset_id>")
+@app.route("/delete-room/<int:room_id>")
 @admin_only
-def delete_asset(asset_id):
-    asset_to_delete = db.session.query(Asset).filter_by(id=asset_id).first()
-    db.session.delete(asset_to_delete)
+def delete_asset(room_id):
+    room_to_delete = db.session.query(Room).filter_by(id=room_id).first()
+    db.session.delete(room_to_delete)
     db.session.commit()
     return redirect(url_for('index'))
 
