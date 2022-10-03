@@ -20,7 +20,7 @@ login_manager.login_view = "login"
 
 
 ##CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///asset_manager.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///student_manager.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -128,6 +128,24 @@ def login():
     return render_template("login.html", form=form)
 
 
+@app.route('/student-login', methods=['GET', 'POST'])
+def login():
+    form = forms.LoginForm()
+    if form.validate_on_submit():
+        student = db.session.query(Student).filter_by(email=form.email.data).first()
+        if student is not None:
+            if check_password_hash(student.password, form.password.data):
+                login_user(student)
+                return redirect(url_for('index'))
+            else:
+                flash("Incorrect password, please try again.")
+                return redirect(url_for("login", form=form))
+        else:
+            flash("The email is not recognized please try again or create an account.")
+            return redirect(url_for("login", form=form))
+    return render_template("login.html", form=form)
+
+
 @app.route('/logout')
 def logout():
     logout_user()
@@ -161,7 +179,6 @@ def new_student():
 
     # On valid submit of the form it will start the creation of a student.
     if form.validate_on_submit():
-        print(db.session.query(Room).filter_by(id=form.room.data).first().id)
         student_to_add = Student()
         student_to_add.firstname = form.firstname.data
         student_to_add.lastname = form.lastname.data
@@ -182,9 +199,18 @@ def new_student():
 
 @app.route("/delete-room/<int:room_id>")
 @admin_only
-def delete_asset(room_id):
+def delete_room(room_id):
     room_to_delete = db.session.query(Room).filter_by(id=room_id).first()
     db.session.delete(room_to_delete)
+    db.session.commit()
+    return redirect(url_for('index'))
+
+
+@app.route("/delete-student/<int:student_id>")
+@admin_only
+def delete_student(student_id):
+    student_to_delete = db.session.query(Room).filter_by(id=student_id).first()
+    db.session.delete(student_to_delete)
     db.session.commit()
     return redirect(url_for('index'))
 
