@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}SATCoL Assets{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- CSS  -->
+<link rel="stylesheet" href="{{url_for('static', filename='dashboard.css')}}">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+<script type="text/javascript" language="javascript" src="{{ url_for('static', filename='js/table.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+
+
+<main role="main">
+  <section class="pt-3 px-4 text-center">
+    <h1>Welcome {{current_user.firstname}}</h1>
+    <div class="pb-2 mb-3 border-bottom">
+      <h2>Student Dashboard</h2>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-primary alert-dismissible fade show" role="alert">
+            {{message}}
+            <button type="button" class="close btn btn-sm" data-bs-dismiss="alert" aria-label="Close">
+                <i class="fa-solid fa-x" style="color: #004085"></i>
+            </button>
+        </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="container pb-5">
+      <div class="row">
+        <div class="col-md">
+          {% if current_user.signed_in %}
+          <div class="card my-2">
+            <a class='nav-link' href="{{url_for('student_sign_out')}}">
+              <div class="card-body card-hover text-center">
+                <h5 class="card-title">Sign Out</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Click here to say you are off site!</h6>
+                  <hr>
+                <p class="card-text"><i class="fa-solid fa-user fa-2xl"></i></p>
+              </div>
+            </a>
+          </div>
+          {% else %}
+          <div class="card my-2">
+            <a class='nav-link' href="{{url_for('student_sign_in')}}">
+              <div class="card-body card-hover text-center">
+                <h5 class="card-title">Sign In</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Click here to say you are on site!</h6>
+                <hr>
+                <p class="card-text"><i class="fa-solid fa-user fa-2xl"></i></p>
+              </div>
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        <div class="col-md">
+          <div class="card my-2">
+            <a class='nav-link' href="">
+            <div class="card-body">
+              <h5 class="card-title">Contact a Warden</h5>
+              <h6 class="card-subtitle mb-2 text-muted">Click here to view contact details for a warden</h6>
+              <hr>
+              <p class="card-text"><i class="fa-solid fa-door-open fa-2xl"></i></p>
+            </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section>
+    <hr>
+    <h2 class="text-center mb-5 h1">Up Coming Events</h2>
+      <div class="container">
+        <div class="row justify-content-center p-0">
+        {% for event in all_events %}
+            <div class="card col-lg-3 col-md-4 mx-2 my-2 p-0" style="">
+               <img src="{{event.url}}" class="card-img-top h-100" style="" alt="...">
+              <div class="card-body">
+                <h4 class="card-title">{{ event.title }}</h4>
+                <h5 class="card-title">{{ event.subheading }} </h5>
+                <p class="card-text">{{ event.body }}</p>
+                <span>{{event.date.date()}}</span>
+<!--                <a href="#" class="btn btn-primary">More Detail</a>-->
+              </div>
+            </div>
+        {% endfor %}
+        </div>
+      </div>
+    </section>
+</main>
+{% endblock %}

@@ -17,7 +17,7 @@
       {% block header %}
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
-  <a class="navbar-brand" href="{{ url_for('index') }}">SATCoL</a>>
+  <a class="navbar-brand" href="{{ url_for('index') }}">Student Manager</a>>
     <ul class="navbar-nav me-auto">
       <li class="nav-item active">
         <a class="nav-link" href="{{ url_for('index') }}">Home</a>
@@ -33,10 +33,6 @@
         <a class="nav-link" href="{{ url_for('logout') }}">Sign Out</a>
       </li>
     </ul>
-<!--    <form class="d-flex" role="search">-->
-<!--      <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">-->
-<!--      <button class="btn btn-outline-light" type="submit">Search</button>-->
-<!--    </form>-->
 </nav>
       {% endblock %}
   </header>

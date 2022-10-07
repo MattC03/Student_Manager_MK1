@@ -23,11 +23,21 @@ class CreateRoomForm(FlaskForm):
     submit = SubmitField("Add Room")
 
 
+class CreateEventForm(FlaskForm):
+    title = StringField("Title", validators=[InputRequired()])
+    subheading = StringField("Subtitle", validators=[InputRequired()])
+    date = DateField("Date", validators=[InputRequired()])
+    url = StringField("URL for picture", validators=[InputRequired()])
+    body = StringField("Body", validators=[InputRequired()])
+    submit = SubmitField("Add Event")
+
+
 class RegisterForm(FlaskForm):
+    firstname = StringField("First Name", validators=[InputRequired()])
+    lastname = StringField("Last Name", validators=[InputRequired()])
     email = StringField("Email", validators=[InputRequired()])
     password = PasswordField("Password", validators=[InputRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
-    name = StringField("Name", validators=[InputRequired()])
     submit = SubmitField("Register")
 
 
@@ -35,3 +45,8 @@ class LoginForm(FlaskForm):
     email = StringField("Email", validators=[InputRequired()])
     password = PasswordField("Password", validators=[InputRequired()])
     submit = SubmitField("Login")
+
+
+class SignInSignOutForm(FlaskForm):
+    check = HiddenField()
+    submit = SubmitField()

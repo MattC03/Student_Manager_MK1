@@ -14,7 +14,7 @@
 
 
 <main role="main" class="pt-3 px-4">
-  <h1>Welcome {{current_user.name}}</h1>
+  <h1>Welcome {{current_user.firstname}}</h1>
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">Dashboard</h1>
   </div>
@@ -60,17 +60,19 @@
         </div>
         <div class="col-md">
           <div class="card">
+            <a class='nav-link' href="{{url_for('new_event')}}">
             <div class="card-body">
-              <h5 class="card-title">Reports</h5>
+              <h5 class="card-title">Add Event</h5>
               <h6 class="card-subtitle mb-2 text-muted">Click here to generate reports</h6>
               <hr>
-              <p class="card-text"><i class="fa-solid fa-chart-simple fa-2xl"></i></p>
+              <p class="card-text"><i class="fa-solid fa-soccer-ball fa-2xl"></i></p>
             </div>
+            </a>
           </div>
         </div>
       </div>
     </div>
-  <h2>Students</h2>
+  <h2>Signed Out Students</h2>
   <div class="table-responsive">
     <table id="main_table" class="display table table-striped table-sm">
       <thead>
@@ -80,23 +82,25 @@
           <th>Room #</th>
           <th>Block</th>
           <th>Signed In</th>
-          {% if current_user.power_value == 1 %}
-          <th></th>
-          {% endif %}
+<!--          {% if current_user.power_value == 1 %}-->
+<!--          <th></th>-->
+<!--          {% endif %}-->
         </tr>
       </thead>
       <tbody>
       {% for student in all_students %}
+        {% if not student.signed_in %}
           <tr>
             <td>{{ student.firstname}}</td>
             <td>{{ student.lastname}}</td>
             <td>{{ student.room.number }}</td>
             <td>{{ student.room.block }}</td>
             <td>{{ student.signed_in}}</td>
-            {% if current_user.power_value == 1 %}
-            <td><a href="{{ url_for('delete_student', student_id=student.id)}}"><i class="fa-solid fa-x"></i></a></td>
-            {% endif %}
+<!--            {% if current_user.power_value == 1 %}-->
+<!--            <td><a href="{{ url_for('delete_student', user_id=student.id)}}"><i class="fa-solid fa-x"></i></a></td>-->
+<!--            {% endif %}-->
           </tr>
+          {% endif %}
       {% endfor %}
       </tbody>
     </table>
