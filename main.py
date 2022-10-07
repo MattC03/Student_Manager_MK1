@@ -59,7 +59,9 @@ class Event(db.Model):
     date = Column(DateTime, nullable=False)
     body = Column(String(250), nullable=False)
 
-db.create_all()
+with app.app_context():
+    db.create_all()
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -81,7 +83,8 @@ def index():
     if current_user.is_authenticated:
         if current_user.power_value > 0:
             students = db.session.query(User).filter_by(power_value=0)
-            return render_template("index.html", all_students=students)
+            current_year = datetime.datetime.now()
+            return render_template("index.html", all_students=students, current_year=current_year)
         else:
             events = Event.query.all()
             return render_template("student-index.html", all_events=events)
@@ -142,20 +145,32 @@ def logout():
 
 
 # #### STUDENT/ROOM MANAGEMENT #####
+@app.route('/all-students')
+@login_required
+def all_students():
+    students = db.session.query(User).filter_by(power_value=0)
+    current_year = datetime.datetime.now()
+    return render_template("all-students.html", all_students=students, current_year=current_year)
 
 @app.route('/new-room', methods=['GET', 'POST'])
 def new_room():
     form = forms.CreateRoomForm()
     if form.validate_on_submit():
-        room_to_add = Room()
-        room_to_add.block = form.block.data
-        room_to_add.number = form.number.data
-        room_to_add.max_students = form.max_students.data
-        room_to_add.number_of_students = 0
-        db.session.add(room_to_add)
-        db.session.commit()
-        flash(f"Room {room_to_add.block} {room_to_add.number} has been added")
-        return redirect(url_for("index"))
+        # checks to see if the room is already added.
+        print(db.session.query(Room).filter_by(block=form.block.data, number=form.number.data))
+        if not db.session.query(Room).filter_by(block=form.block.data, number=form.number.data).first():
+            room_to_add = Room()
+            room_to_add.block = form.block.data
+            room_to_add.number = form.number.data
+            room_to_add.max_students = form.max_students.data
+            room_to_add.number_of_students = 0
+            db.session.add(room_to_add)
+            db.session.commit()
+            flash(f"Room {room_to_add.block} {room_to_add.number} has been added")
+            return redirect(url_for("index"))
+        else:
+            flash("Room is already in the system.")
+            return render_template('new-room.html', form=form)
     return render_template('new-room.html', form=form)
 
 
@@ -181,8 +196,8 @@ def new_event():
 def new_student():
     form = forms.CreateStudentForm()
     # make a list of rooms that have places left in them. Then sets this as the selector list.
-    all_rooms_available = [(room.id, f"{room.number} {room.block}") for room in db.session.query(Room).all() if
-                           room.number_of_students >= room.max_students]
+    all_rooms_available = [(room.id, f"{room.block} {room.number}") for room in db.session.query(Room).all() if
+                           room.number_of_students < room.max_students]
     form.room.choices = all_rooms_available
 
     # On valid submit of the form it will start the creation of a student.
@@ -208,6 +223,38 @@ def new_student():
         return redirect(url_for("index"))
     return render_template("new-student.html", form=form)
 
+@app.route("/edit-student/<student_id>/", methods=['GET', 'POST'])
+@login_required
+def edit_student(student_id):
+    form = forms.CreateStudentForm()
+    # make a list of rooms that have places left in them. Then sets this as the selector list.
+    all_rooms_available = [(room.id, f"{room.block} {room.number}") for room in db.session.query(Room).all() if
+                           room.number_of_students < room.max_students]
+    form.room.choices = all_rooms_available
+    student_to_edit = db.session.query(User).filter_by(id=student_id).first()
+    students_room = student_to_edit.room
+
+    # On valid submit of the form it will start the edit of a student.
+    if form.validate_on_submit():
+        student_to_edit.firstname = form.firstname.data
+        student_to_edit.lastname = form.lastname.data
+        student_to_edit.email = form.email.data
+        student_to_edit.dob = form.dob.data
+        # check if the room has changed.
+
+        flash(f"Student {form.firstname.data} has been updated!")
+        return redirect(url_for("index"))
+    # Else it will load the page with all the information filled in.
+    form.firstname.data = student_to_edit.firstname
+    form.lastname.data = student_to_edit.lastname
+    form.email.data = student_to_edit.email
+    form.dob.data = student_to_edit.dob
+    form.room.choices.insert(0, (student_to_edit.room.id, f"{student_to_edit.room.block} {student_to_edit.room.number}"))
+
+
+    return render_template("new-student.html", form=form)
+
+
 @app.route("/student-sign-out")
 @login_required
 def student_sign_out():
@@ -216,6 +263,7 @@ def student_sign_out():
     db.session.commit()
     return redirect(url_for("index"))
 
+
 @app.route("/student-sign-in")
 @login_required
 def student_sign_in():
@@ -223,6 +271,7 @@ def student_sign_in():
     flash("You have been signed in on site.")
     db.session.commit()
     return redirect(url_for("index"))
+
 
 @app.route("/delete-room/<int:room_id>")
 @login_required
@@ -242,6 +291,7 @@ def delete_student(user_id):
     db.session.delete(user_to_delete)
     db.session.commit()
     return redirect(url_for('index'))
+
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 
-
 {% block head %}
 {{ super() }}
 <!-- CSS  -->
@@ -10,7 +9,6 @@
 {% endblock %}
 
 {% block content %}
-
 
 <main role="main" class="pt-3 px-4">
   <h1>Welcome {{current_user.firstname}}</h1>
@@ -69,33 +67,9 @@
             </a>
           </div>
         </div>
-        <div class="col-md">
-          <div class="card">
-            <a class='nav-link' href="{{url_for('all_students')}}">
-            <div class="card-body">
-              <h5 class="card-title">Student Management</h5>
-              <h6 class="card-subtitle mb-2 text-muted">Click here to view all students and make changes.</h6>
-              <hr>
-              <p class="card-text"><i class="fa-solid fa-person fa-2xl"></i></p>
-            </div>
-            </a>
-          </div>
-        </div>
-        <div class="col-md">
-          <div class="card">
-            <a class='nav-link' href="{{url_for('new_event')}}">
-            <div class="card-body">
-              <h5 class="card-title">Room Management</h5>
-              <h6 class="card-subtitle mb-2 text-muted">Click here to view all rooms and make changes.</h6>
-              <hr>
-              <p class="card-text"><i class="fa-solid fa-house fa-2xl"></i></p>
-            </div>
-            </a>
-          </div>
-        </div>
       </div>
     </div>
-  <h2>Signed Out Students</h2>
+  <h2>All Students</h2>
   <div class="table-responsive">
     <table id="main_table" class="display table table-striped table-sm">
       <thead>
@@ -106,25 +80,29 @@
           <th>Room #</th>
           <th>Block</th>
           <th>Signed In</th>
-
+          {% if current_user.power_value == 1 %}
+          <th></th>
+          <th></th>
+          {% endif %}
         </tr>
       </thead>
       <tbody>
       {% for student in all_students %}
-        {% if not student.signed_in %}
           <tr>
             <td>{{ student.firstname}}</td>
             <td>{{ student.lastname}}</td>
-            <td>{{ current_year.year - student.dob.year - ((current_year.month, current_year.day) < (student.dob.month, student.dob.day))}}</td>
+            <td>{{ current_year.year - student.dob.year - ((current_year.month, current_year.day) < (student.dob.month, student.dob.day)) }}</td>
             <td>{{ student.room.number }}</td>
             <td>{{ student.room.block }}</td>
             <td>{{ student.signed_in}}</td>
-
+            {% if current_user.power_value == 1 %}
+            <td><a href="{{ url_for('edit_student', student_id=student.id)}}"><i class="fa-solid fa-pen"></i></a></td>
+            <td><a href="{{ url_for('delete_student', user_id=student.id)}}"><i class="fa-solid fa-x"></i></a></td>
+            {% endif %}
           </tr>
-          {% endif %}
       {% endfor %}
       </tbody>
     </table>
   </div>
 </main>
-{% endblock %}
+ {% endblock %}
