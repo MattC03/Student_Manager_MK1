@@ -16,6 +16,21 @@ class CreateStudentForm(FlaskForm):
     submit = SubmitField("Add Student")
 
 
+class EditStudentForm(FlaskForm):
+    firstname = StringField("First Name", validators=[InputRequired()])
+    lastname = StringField("Last Name", validators=[InputRequired()])
+    email = EmailField("Students Email", validators=[InputRequired(), Email()])
+    dob = DateField("Date of Birth", validators=[InputRequired()])
+    room = SelectField("Room", validators=[InputRequired()])
+    submit = SubmitField("Edit Student")
+
+
+class ChangePassword(FlaskForm):
+    new_password = PasswordField("New Password", validators=[InputRequired()])
+    confirm_password = PasswordField("Confirm Passwword", validators=[InputRequired()])
+    submit = SubmitField("Change Password")
+
+
 class CreateRoomForm(FlaskForm):
     block = StringField("Block", validators=[InputRequired()])
     number = IntegerField("Room Number", validators=[InputRequired()])

@@ -1,7 +1,7 @@
 import datetime
 from functools import wraps
 from flask import Flask, render_template, redirect, url_for, flash, abort
-from sqlalchemy import ForeignKey, Column, String, Integer, Boolean, Text, DateTime
+from sqlalchemy import ForeignKey, Column, String, Integer, Boolean, Text, DateTime, desc
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, backref
@@ -38,6 +38,7 @@ class User(db.Model, UserMixin):
     room_id = Column(Integer, db.ForeignKey('room.id'))
     power_value = Column(Integer, nullable=False)
     signed_in = db.Column(Boolean)
+    change_password_needed = db.Column(Boolean)
     last_sign_in = db.Column(String)
     last_sign_out = db.Column(String)
 
@@ -86,7 +87,7 @@ def index():
             current_year = datetime.datetime.now()
             return render_template("index.html", all_students=students, current_year=current_year)
         else:
-            events = Event.query.all()
+            events = Event.query.order_by(Event.date).all()
             return render_template("student-index.html", all_events=events)
     else:
         return redirect((url_for('login')))
@@ -128,6 +129,9 @@ def login():
         if user is not None:
             if check_password_hash(user.password, form.password.data):
                 login_user(user)
+                # Check to see if password needs update.
+                if user.change_password_needed:
+                    return redirect(url_for("change_password"))
                 return redirect(url_for('index'))
             else:
                 flash("Incorrect password, please try again.")
@@ -135,8 +139,28 @@ def login():
         else:
             flash("The email is not recognized please try again or create an account.")
             return redirect(url_for("login", form=form))
-    return render_template("login.html", form=form)
+    return render_template("login.html", form=form)\
 
+@app.route('/change-password/', methods=['GET', 'POST'])
+def change_password():
+    form = forms.ChangePassword()
+    if form.validate_on_submit():
+        current_user.password = generate_password_hash(form.new_password.data, method='pbkdf2:sha256', salt_length=8)
+        current_user.change_password_needed = False
+        db.session.commit()
+        return redirect(url_for("index"))
+    return render_template("change-password.html", form=form)
+
+@app.route('/change-password/<student_id>', methods=['GET', 'POST'])
+def force_password_change(student_id):
+    form = forms.ChangePassword()
+    user = db.session.query(User).filter_by(id=student_id).first()
+    if form.validate_on_submit():
+        user.password = generate_password_hash(form.new_password.data, method='pbkdf2:sha256', salt_length=8)
+        user.change_password_needed = True
+        db.session.commit()
+        return redirect(url_for("all_students"))
+    return render_template("change-password.html", form=form)
 
 @app.route('/logout')
 def logout():
@@ -148,9 +172,31 @@ def logout():
 @app.route('/all-students')
 @login_required
 def all_students():
-    students = db.session.query(User).filter_by(power_value=0)
     current_year = datetime.datetime.now()
-    return render_template("all-students.html", all_students=students, current_year=current_year)
+    students = db.session.query(User).filter_by(power_value=0)
+    under18 = []
+    over18 = []
+    for student in students:
+        age = current_year.year - student.dob.year - ((current_year.month, current_year.day) < (student.dob.month, student.dob.day))
+        if age < 18:
+            under18.append(student)
+        else:
+            over18.append(student)
+    return render_template("all-students.html", all_students=students, current_year=current_year, under18=under18, over18=over18)
+
+@app.route('/all-rooms')
+@login_required
+def all_rooms():
+    rooms = db.session.query(Room).all()
+    rooms_full = []
+    rooms_free = []
+    for room in rooms:
+        if room.number_of_students < room.max_students:
+            rooms_free.append(room)
+        else:
+            rooms_full.append(room)
+
+    return render_template("all-rooms.html", all_rooms=rooms, rooms_full=rooms_full, rooms_free=rooms_free)
 
 @app.route('/new-room', methods=['GET', 'POST'])
 def new_room():
@@ -214,6 +260,7 @@ def new_student():
         student_to_add.password = generate_password_hash(form.password.data, method='pbkdf2:sha256', salt_length=8)
         student_to_add.power_value = 0
         student_to_add.signed_in = True
+        student_to_add.change_password_needed = True
         db.session.add(student_to_add)
         db.session.commit()
         # This then increased the amount of students that are in that room.
@@ -226,13 +273,14 @@ def new_student():
 @app.route("/edit-student/<student_id>/", methods=['GET', 'POST'])
 @login_required
 def edit_student(student_id):
-    form = forms.CreateStudentForm()
+    form = forms.EditStudentForm()
     # make a list of rooms that have places left in them. Then sets this as the selector list.
     all_rooms_available = [(room.id, f"{room.block} {room.number}") for room in db.session.query(Room).all() if
                            room.number_of_students < room.max_students]
     form.room.choices = all_rooms_available
     student_to_edit = db.session.query(User).filter_by(id=student_id).first()
     students_room = student_to_edit.room
+    form.room.choices.insert(0, (student_to_edit.room.id, f"{student_to_edit.room.block} {student_to_edit.room.number}"))
 
     # On valid submit of the form it will start the edit of a student.
     if form.validate_on_submit():
@@ -240,19 +288,20 @@ def edit_student(student_id):
         student_to_edit.lastname = form.lastname.data
         student_to_edit.email = form.email.data
         student_to_edit.dob = form.dob.data
-        # check if the room has changed.
-
+        student_to_edit.room_id = form.room.data
         flash(f"Student {form.firstname.data} has been updated!")
-        return redirect(url_for("index"))
+        db.session.commit()
+        return redirect(url_for("all_students"))
+
     # Else it will load the page with all the information filled in.
     form.firstname.data = student_to_edit.firstname
     form.lastname.data = student_to_edit.lastname
     form.email.data = student_to_edit.email
     form.dob.data = student_to_edit.dob
-    form.room.choices.insert(0, (student_to_edit.room.id, f"{student_to_edit.room.block} {student_to_edit.room.number}"))
 
 
-    return render_template("new-student.html", form=form)
+
+    return render_template("edit-student.html", form=form)
 
 
 @app.route("/student-sign-out")

@@ -33,29 +33,23 @@
       <div class="row">
         <div class="col-md">
           <div class="card">
-            <a class='nav-link' href="{{url_for('new_student')}}">
               <div class="card-body card-hover">
-                <h2 class="card-title">Current Students: {{(under18|length) + (over18|length)}}</h2>
+                <h2 class="card-title">Total Rooms: {{rooms_full|length + rooms_free|length}}</h2>
               </div>
-            </a>
           </div>
         </div>
         <div class="col-md">
           <div class="card">
-            <a class='nav-link' href="{{url_for('new_room')}}">
             <div class="card-body">
-              <h2 class="card-title">Under 18's: {{under18|length}}</h2>
+              <h2 class="card-title">Rooms Full: {{rooms_full|length}}</h2>
             </div>
-            </a>
           </div>
         </div>
         <div class="col-md">
           <div class="card">
-            <a class='nav-link' href="{{url_for('new_event')}}">
             <div class="card-body">
-              <h2 class="card-title">Over 18's: {{over18|length}}</h2>
+              <h2 class="card-title">Rooms Free: {{rooms_free|length}}</h2>
             </div>
-            </a>
           </div>
         </div>
       </div>
@@ -65,32 +59,26 @@
     <table id="main_table" class="display table table-striped table-sm">
       <thead>
         <tr>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>Age</th>
-          <th>Room #</th>
           <th>Block</th>
-          <th>Signed In</th>
+          <th>Number</th>
+          <th>Number of Students</th>
+          <th>Max Students</th>
           {% if current_user.power_value == 1 %}
-          <th></th>
           <th></th>
           <th></th>
           {% endif %}
         </tr>
       </thead>
       <tbody>
-      {% for student in all_students %}
+      {% for room in all_rooms %}
           <tr>
-            <td>{{ student.firstname}}</td>
-            <td>{{ student.lastname}}</td>
-            <td>{{ current_year.year - student.dob.year - ((current_year.month, current_year.day) < (student.dob.month, student.dob.day)) }}</td>
-            <td>{{ student.room.number }}</td>
-            <td>{{ student.room.block }}</td>
-            <td>{{ student.signed_in}}</td>
+            <td>{{ room.block}}</td>
+            <td>{{ room.number}}</td>
+            <td>{{ room.number_of_students}}</td>
+            <td>{{ room.max_students}}</td>
             {% if current_user.power_value == 1 %}
-            <td><a href="{{ url_for('edit_student', student_id=student.id)}}"><i class="fa-solid fa-pen"></i></a></td>
-            <td><a href="{{ url_for('force_password_change', student_id=student.id)}}"><i class="fa-solid fa-unlock"></i></a></td>
-            <td><a href="{{ url_for('delete_student', user_id=student.id)}}"><i class="fa-solid fa-x"></i></a></td>
+            <td><a href="{{ url_for('edit_student', student_id=room.id)}}"><i class="fa-solid fa-pen"></i></a></td>
+            <td><a href="{{ url_for('delete_student', user_id=room.id)}}"><i class="fa-solid fa-x"></i></a></td>
             {% endif %}
           </tr>
       {% endfor %}
