@@ -60,6 +60,7 @@ class Event(db.Model):
     date = Column(DateTime, nullable=False)
     body = Column(String(250), nullable=False)
 
+
 with app.app_context():
     db.create_all()
 
@@ -72,7 +73,7 @@ def load_user(user_id):
 def admin_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.power_value >= 1:
+        if current_user.power_value < 1:
             return abort(403)
         return f(*args, **kwargs)
 
@@ -139,19 +140,24 @@ def login():
         else:
             flash("The email is not recognized please try again or create an account.")
             return redirect(url_for("login", form=form))
-    return render_template("login.html", form=form)\
+    return render_template("login.html", form=form)
+
 
 @app.route('/change-password/', methods=['GET', 'POST'])
 def change_password():
     form = forms.ChangePassword()
     if form.validate_on_submit():
-        current_user.password = generate_password_hash(form.new_password.data, method='pbkdf2:sha256', salt_length=8)
+        current_user.password = generate_password_hash(form.new_password.data, method='pbkdf2:sha256',
+                                                       salt_length=8)
         current_user.change_password_needed = False
         db.session.commit()
         return redirect(url_for("index"))
     return render_template("change-password.html", form=form)
 
+
 @app.route('/change-password/<student_id>', methods=['GET', 'POST'])
+@login_required
+@admin_only
 def force_password_change(student_id):
     form = forms.ChangePassword()
     user = db.session.query(User).filter_by(id=student_id).first()
@@ -162,6 +168,7 @@ def force_password_change(student_id):
         return redirect(url_for("all_students"))
     return render_template("change-password.html", form=form)
 
+
 @app.route('/logout')
 def logout():
     logout_user()
@@ -169,23 +176,10 @@ def logout():
 
 
 # #### STUDENT/ROOM MANAGEMENT #####
-@app.route('/all-students')
-@login_required
-def all_students():
-    current_year = datetime.datetime.now()
-    students = db.session.query(User).filter_by(power_value=0)
-    under18 = []
-    over18 = []
-    for student in students:
-        age = current_year.year - student.dob.year - ((current_year.month, current_year.day) < (student.dob.month, student.dob.day))
-        if age < 18:
-            under18.append(student)
-        else:
-            over18.append(student)
-    return render_template("all-students.html", all_students=students, current_year=current_year, under18=under18, over18=over18)
 
 @app.route('/all-rooms')
 @login_required
+@admin_only
 def all_rooms():
     rooms = db.session.query(Room).all()
     rooms_full = []
@@ -198,12 +192,14 @@ def all_rooms():
 
     return render_template("all-rooms.html", all_rooms=rooms, rooms_full=rooms_full, rooms_free=rooms_free)
 
+
 @app.route('/new-room', methods=['GET', 'POST'])
+@login_required
+@admin_only
 def new_room():
     form = forms.CreateRoomForm()
     if form.validate_on_submit():
         # checks to see if the room is already added.
-        print(db.session.query(Room).filter_by(block=form.block.data, number=form.number.data))
         if not db.session.query(Room).filter_by(block=form.block.data, number=form.number.data).first():
             room_to_add = Room()
             room_to_add.block = form.block.data
@@ -220,7 +216,31 @@ def new_room():
     return render_template('new-room.html', form=form)
 
 
+@app.route('/edit-room/<room_id>', methods=['GET', 'POST'])
+@login_required
+@admin_only
+def edit_room(room_id):
+    form = forms.EditRoomForm()
+    room = db.session.query(Room).filter_by(id=room_id).first()
+    if form.validate_on_submit():
+        room.block = form.block.data
+        room.number = form.number.data
+        room.max_students = form.max_students.data
+        room.number_of_students = 0
+        db.session.commit()
+        flash(f"Room {room.block} {room.number} has been updated")
+        return redirect(url_for("all_rooms"))
+
+    form.block.data = room.block
+    form.number.data = room.number
+    form.max_students.data = room.max_students
+
+    return render_template('new-room.html', form=form)
+
+
 @app.route('/new-event', methods=['GET', 'POST'])
+@login_required
+@admin_only
 def new_event():
     form = forms.CreateEventForm()
     if form.validate_on_submit():
@@ -237,8 +257,28 @@ def new_event():
     return render_template('new-event.html', form=form)
 
 
+@app.route('/all-students')
+@login_required
+@admin_only
+def all_students():
+    current_year = datetime.datetime.now()
+    students = db.session.query(User).filter_by(power_value=0)
+    under18 = []
+    over18 = []
+    for student in students:
+        age = current_year.year - student.dob.year - (
+                (current_year.month, current_year.day) < (student.dob.month, student.dob.day))
+        if age < 18:
+            under18.append(student)
+        else:
+            over18.append(student)
+    return render_template("all-students.html", all_students=students, current_year=current_year, under18=under18,
+                           over18=over18)
+
+
 @app.route("/new-student", methods=['GET', 'POST'])
 @login_required
+@admin_only
 def new_student():
     form = forms.CreateStudentForm()
     # make a list of rooms that have places left in them. Then sets this as the selector list.
@@ -270,8 +310,10 @@ def new_student():
         return redirect(url_for("index"))
     return render_template("new-student.html", form=form)
 
+
 @app.route("/edit-student/<student_id>/", methods=['GET', 'POST'])
 @login_required
+@admin_only
 def edit_student(student_id):
     form = forms.EditStudentForm()
     # make a list of rooms that have places left in them. Then sets this as the selector list.
@@ -279,8 +321,10 @@ def edit_student(student_id):
                            room.number_of_students < room.max_students]
     form.room.choices = all_rooms_available
     student_to_edit = db.session.query(User).filter_by(id=student_id).first()
+    # Checks if the student is in a room then adds that to the list of rooms.
     students_room = student_to_edit.room
-    form.room.choices.insert(0, (student_to_edit.room.id, f"{student_to_edit.room.block} {student_to_edit.room.number}"))
+    if students_room:
+        form.room.choices.insert(0, (student_to_edit.room.id, f"{student_to_edit.room.block} {student_to_edit.room.number}"))
 
     # On valid submit of the form it will start the edit of a student.
     if form.validate_on_submit():
@@ -299,10 +343,9 @@ def edit_student(student_id):
     form.email.data = student_to_edit.email
     form.dob.data = student_to_edit.dob
 
-
-
     return render_template("edit-student.html", form=form)
 
+# ### STUDENT ACTIONS ### #
 
 @app.route("/student-sign-out")
 @login_required
@@ -322,6 +365,8 @@ def student_sign_in():
     return redirect(url_for("index"))
 
 
+# ### DELETE CALLS ### #
+
 @app.route("/delete-room/<int:room_id>")
 @login_required
 @admin_only
@@ -329,7 +374,7 @@ def delete_room(room_id):
     room_to_delete = db.session.query(Room).filter_by(id=room_id).first()
     db.session.delete(room_to_delete)
     db.session.commit()
-    return redirect(url_for('index'))
+    return redirect(url_for('all_rooms'))
 
 
 @app.route("/delete-student/<int:user_id>")
@@ -337,9 +382,11 @@ def delete_room(room_id):
 @admin_only
 def delete_student(user_id):
     user_to_delete = db.session.query(User).filter_by(id=user_id).first()
+    room = db.session.query(Room).filter_by(id=user_to_delete.room.id).first()
+    room.number_of_students -= 1
     db.session.delete(user_to_delete)
     db.session.commit()
-    return redirect(url_for('index'))
+    return redirect(url_for('all_students'))
 
 
 if __name__ == "__main__":

@@ -31,14 +31,14 @@
       {% endif %}
     {% endwith %}
 
-    <div class="container pb-5">
+    <div class="container-fluid pb-5">
       <div class="row">
         <div class="col-md">
           <div class="card">
             <a class='nav-link' href="{{url_for('new_student')}}">
               <div class="card-body card-hover">
                 <h5 class="card-title">Add Student</h5>
-                <h6 class="card-subtitle mb-2 text-muted">Click here to add a new student</h6>
+                <h6 class="card-subtitle mb-2 text-muted">Click here to add a new student to the system.</h6>
                 <hr>
                 <p class="card-text"><i class="fa-solid fa-user fa-2xl"></i></p>
               </div>
@@ -50,7 +50,7 @@
             <a class='nav-link' href="{{url_for('new_room')}}">
             <div class="card-body">
               <h5 class="card-title">Add Room</h5>
-              <h6 class="card-subtitle mb-2 text-muted">Click here to add a new room</h6>
+              <h6 class="card-subtitle mb-2 text-muted">Click here to add a new room to the system.</h6>
               <hr>
               <p class="card-text"><i class="fa-solid fa-door-open fa-2xl"></i></p>
             </div>
@@ -62,7 +62,7 @@
             <a class='nav-link' href="{{url_for('new_event')}}">
             <div class="card-body">
               <h5 class="card-title">Add Event</h5>
-              <h6 class="card-subtitle mb-2 text-muted">Click here to generate reports</h6>
+              <h6 class="card-subtitle mb-2 text-muted">Click here to add an event to the system.</h6>
               <hr>
               <p class="card-text"><i class="fa-solid fa-soccer-ball fa-2xl"></i></p>
             </div>
@@ -89,6 +89,18 @@
               <h6 class="card-subtitle mb-2 text-muted">Click here to view all rooms and make changes.</h6>
               <hr>
               <p class="card-text"><i class="fa-solid fa-house fa-2xl"></i></p>
+            </div>
+            </a>
+          </div>
+        </div>
+        <div class="col-md">
+          <div class="card">
+            <a class='nav-link' href="{{url_for('all_rooms')}}">
+            <div class="card-body">
+              <h5 class="card-title">Event Management</h5>
+              <h6 class="card-subtitle mb-2 text-muted">Click here to view all events and make changes.</h6>
+              <hr>
+              <p class="card-text"><i class="fa-solid fa-calendar-days fa-2xl"></i></p>
             </div>
             </a>
           </div>

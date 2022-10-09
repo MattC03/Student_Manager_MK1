@@ -33,23 +33,29 @@
       <div class="row">
         <div class="col-md">
           <div class="card">
+            <a class='nav-link' href="{{url_for('new_student')}}">
               <div class="card-body card-hover">
                 <h2 class="card-title">Current Students: {{(under18|length) + (over18|length)}}</h2>
               </div>
+            </a>
           </div>
         </div>
         <div class="col-md">
           <div class="card">
+            <a class='nav-link' href="{{url_for('new_room')}}">
             <div class="card-body">
               <h2 class="card-title">Under 18's: {{under18|length}}</h2>
             </div>
+            </a>
           </div>
         </div>
         <div class="col-md">
           <div class="card">
+            <a class='nav-link' href="{{url_for('new_event')}}">
             <div class="card-body">
               <h2 class="card-title">Over 18's: {{over18|length}}</h2>
             </div>
+            </a>
           </div>
         </div>
       </div>
